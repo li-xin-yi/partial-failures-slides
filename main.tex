@@ -1,0 +1,41 @@
+% !TeX engine = xelatex
+% !TeX spellcheck = en-US
+% adjust to 16:9 for displays. you can just use \documentclass[handout]{ctexbeamer} for notes
+
+\documentclass[aspectratio=169]{beamer}
+\usepackage{booktabs}
+\usepackage{svg}
+\usepackage{fontawesome}
+\usepackage[style=authortitle-comp,backend=bibtex]{biblatex}
+\usecolortheme{seagull}
+\setbeamertemplate{sidebar right}{}
+\setbeamertemplate{footline}{%
+	\hfill\usebeamertemplate***{navigation symbols}
+    \hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
+
+\title{Understanding, Detecting and Localizing Partial Failures in Large System Software\footfullcite{lou2020understanding}}
+\date{\today}
+
+\addbibresource{ref.bib}
+
+\begin{document}
+
+\begin{frame}
+	\titlepage
+\end{frame}
+
+\begin{frame}{Overview}
+    \tableofcontents
+  \end{frame}
+
+\section{Problem definition}
+
+\begin{frame}
+    \frametitle{What is a Partial Failure?}
+    \begin{definition}
+        A partial failure is, in a process $\pi$ to be when a fault \textbf{does not} crash $\pi$ but causes safety or liveness violation or severe slowness for some functionality $R_f \subsetneq  R$
+
+    \end{definition}
+\end{frame}
+    
+\end{document}
