@@ -8,6 +8,7 @@
 \usepackage{fontawesome}
 \usepackage{xcolor}
 \usepackage{bookmark}
+\usepackage{longtable}
 \usepackage[style=authortitle-comp,backend=bibtex]{biblatex}
 \usecolortheme{seagull}
 \setbeamertemplate{sidebar right}{}
@@ -62,7 +63,7 @@
     \frametitle{What is a Partial Failure?}
     \framesubtitle{An Example}
     \begin{center}
-        \includegraphics[width=\textwidth]{fig/example1}
+        \includegraphics[width=\textwidth]{fig/example1.pdf}
     \end{center}
 \end{frame}
 
@@ -507,31 +508,146 @@ zookeeper-3.4.6-with-wd.jar
     \end{tabular}
 \end{frame}
 
-% \begin{frame}[allowframebreaks]{22 Real-world Partial Failures Reproduced for Evaluation}
-%     \begin{tabular}{c|c|c|c|c|c}
-%         JIRA Id.       & Id. & Root Cause          & Conseq.      & Sticky? & Study? \\
-%         ZooKeeper-2201 & ZK1 & Bad Synch.          & Stuck        & No      & Yes    \\
-%         ZooKeeper-602  & ZK2 & Uncaught Error      & Zombie       & Yes     & Yes    \\
-%         ZooKeeper-2325 & ZK3 & Logic Error         & Inconsist    & Yes     & No     \\
-%         ZooKeeper-3131 & ZK4 & Resource            & Leak Slow    & Yes     & Yes    \\
-%         Cassandra-6364 & CS1 & Uncaught            & Error Zombie & Yes     & Yes    \\
-%         Cassandra-6415 & CS2 & Indefinite Blocking & Stuck        & No      & Yes    \\
-%         Cassandra-9549 & CS3 & Resource Leak       & Slow         & Yes     & No     \\
-%         Cassandra-9486 & CS4 & Performance   Bug   & Slow         & Yes     & No     \\
-%         % HDFS-8429 HF1 Uncaught Error Stuck Yes Yes
-%         % HDFS-11377 HF2 Indefinite Blocking Stuck No Yes
-%         % HDFS-11352 HF3 Deadlock Stuck Yes No
-%         % HDFS-4233 HF4 Uncaught Error Data Loss Yes No
-%         % HBase-18137 HB1 Infinite Loop Stuck Yes No
-%         % HBase-16429 HB2 Deadlock Stuck Yes No
-%         % HBase-21464 HB3 Logic Error Stuck Yes No
-%         % HBase-21357 HB4 Uncaught Error Denial Yes No
-%         % HBase-16081 HB5 Indefinite Blocking Silent Yes No
-%         % MapReduce-6351 MR1 Deadlock Stuck Yes No
-%         % MapReduce-6190 MR2 Infinite Loop Stuck Yes No
-%         % MapReduce-6957 MR3 Improper Err Handling Stuck Yes No
-%         % MapReduce-3634 MR4 Uncaught Error Zombie Yes No
-%         % Yarn-4254 YN1 Improper Err Handling Stuck Yes No
-%     \end{tabular}
-% \end{frame}
+\begin{frame}[allowframebreaks]{22 Real-world Partial Failures Reproduced for Evaluation}
+    \begin{longtable}{c|c|c|c|c|c}
+        \toprule
+        JIRA Id.       & Id. & Root Cause            & Conseq.   & Sticky? & Study? \\
+        \midrule
+        ZooKeeper-2201 & ZK1 & Bad Synch.            & Stuck     & No      & Yes    \\
+        ZooKeeper-602  & ZK2 & Uncaught Error        & Zombie    & Yes     & Yes    \\
+        ZooKeeper-2325 & ZK3 & Logic Error           & Inconsist & Yes     & No     \\
+        ZooKeeper-3131 & ZK4 & Resource  Leak        & Slow      & Yes     & Yes    \\
+        \midrule
+        Cassandra-6364 & CS1 & Uncaught  Error       & Zombie    & Yes     & Yes    \\
+        Cassandra-6415 & CS2 & Indefinite Blocking   & Stuck     & No      & Yes    \\
+        Cassandra-9549 & CS3 & Resource Leak         & Slow      & Yes     & No     \\
+        Cassandra-9486 & CS4 & Performance   Bug     & Slow      & Yes     & No     \\
+        \midrule
+        HDFS-8429      & HF1 & Uncaught Error        & Stuck     & Yes     & Yes    \\
+        HDFS-11377     & HF2 & Indefinite Blocking   & Stuck     & No      & Yes    \\
+        HDFS-11352     & HF3 & Deadlock              & Stuck     & Yes     & No     \\
+        HDFS-4233      & HF4 & Uncaught  Error       & Data Loss & Yes     & No     \\
+        \midrule
+        HBase-18137    & HB1 & Infinite Loop         & Stuck     & Yes     & No     \\
+        HBase-16429    & HB2 & Deadlock              & Stuck     & Yes     & No     \\
+        HBase-21464    & HB3 & Logic Error           & Stuck     & Yes     & No     \\
+        HBase-21357    & HB4 & Uncaught Error        & Denial    & Yes     & No     \\
+        HBase-16081    & HB5 & Indefinite Blocking   & Silent    & Yes     & No     \\
+        \midrule
+        MapReduce-6351 & MR1 & Deadlock              & Stuck     & Yes     & No     \\
+        MapReduce-6190 & MR2 & Infinite Loop         & Stuck     & Yes     & No     \\
+        MapReduce-6957 & MR3 & Improper Err Handling & Stuck     & Yes     & No     \\
+        MapReduce-3634 & MR4 & Uncaught Error        & Zombie    & Yes     & No     \\
+        \midrule
+        Yarn-4254      & YN1 & Improper Err Handling & Stuck     & Yes     & No     \\
+        \bottomrule
+    \end{longtable}
+\end{frame}
+
+\begin{frame}{Baseline}
+    \begin{description}
+        \item[\textbf{Client}] \texttt{Panorama}\footfullcite{huang2018capturing}: instrument and monitor client responses
+        \item[\textbf{Probe}]  \texttt{Falcon}\footfullcite{leners2011detecting}: daemon thread in the process that periodically invokes internal functions with synthetic requests
+        \item[\textbf{Signal}] script that scans logs and checks JMX metrics
+        \item[\textbf{Resource}]  daemon thread that monitors memory usage, disk and I/O health, and active thread count
+    \end{description}
+\end{frame}
+
+\begin{frame}{Detection Time}
+    \begin{itemize}
+        \item median detection time: 4.2s
+        \item 12 by default vulnerable operation rules
+        \item 8  by system-specific rules
+        \item effective forliveness issues like deadlock, indefinite blocking, and safe issues
+        \item less effective for silent correctness errors
+    \end{itemize}
+    \begin{center}
+        \includegraphics[width=1\textwidth]{fig/time}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Detection Localization}
+    \includegraphics[width=\textwidth]{fig/localization}
+\end{frame}
+
+\begin{frame}{False Alarms}
+    \framesubtitle{False alarm ratios of all detectors for six systems under various setups}
+    \begin{itemize}
+        \item validator $\to$ the watchdog false alarm ratios decrease
+    \end{itemize}
+
+    \begin{center}
+        \includegraphics[width=\textwidth]{fig/false-alarm}
+    \end{center}
+\end{frame}
+
+\begin{frame}{System Overhead}
+    \begin{block}{}
+        Time to generate watchdogs: 17 min for HBase, $<$ 5 min for the others
+    \end{block}
+    \begin{columns}
+        \begin{column}{.5\textwidth}
+            Throughput (op/s) w/ different checkers
+            \vspace{1em}
+            \begin{center}
+                \includegraphics[width=\textwidth]{fig/throughput}
+
+            \end{center}
+            \vspace{1em}
+            \begin{block}{}
+                5.0\%-6.6\% throughput overhead  w/ watchdog
+            \end{block}
+        \end{column}
+
+        \begin{column}{.55\textwidth}
+            Heap memory usage w/ and w/o watchdogs
+            \begin{center}
+                \includegraphics[width=\textwidth]{fig/heap}
+            \end{center}
+            \begin{block}{}
+                4.3\% (avg) memory overhead  w/ watchdog
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{By-product: Discovering A New Partial Failure Bug\footnote{Detailed report available at \url{https://issues.apache.org/jira/browse/ZOOKEEPER-3531}}}
+    \framesubtitle{Watchdogs report the failure in 4.7 seconds occasionally during experiments}
+
+    \includegraphics[width=\textwidth]{fig/log}
+
+\end{frame}
+
+
+\section{Summary}
+
+\begin{frame}{Summary}
+    \begin{itemize}
+        \item \textbf{Motivation:} Modern software are increasingly complex and often fail
+        partially
+        \begin{itemize}
+            \item these partial failures cannot be detected by process-level failure detectors
+        \end{itemize}
+
+        \vspace{1em}
+
+        \item \textbf{Case study:} On 100 partial failure cases
+        \begin{itemize}
+            \item No main root causes, hard to detect with existing methods
+        \end{itemize}
+
+        \vspace{1em}
+
+        \item \textbf{Proposed solution:} \texttt{OmegaGen}: a static analysis tool that automatically generates customized checkers
+        \begin{itemize}
+            \item successfully generate checkers for six systems and checkers can detect\& localize 18/22 real-world partial failures
+            \item watchdog report helps to quickly discover a new bug in the latest zookeeper
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \centering
+    \Huge{Thanks}
+\end{frame}
 \end{document}
