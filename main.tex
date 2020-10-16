@@ -398,8 +398,8 @@ zookeeper-3.4.6-with-wd.jar
     \begin{itemize}
         \item Heuristics (default):
         \begin{itemize}
-            \item synchronisation
-            \item resource allocaion
+            \item synchronization
+            \item resource allocation
             \item event polling
             \item async waiting
             \item invocations using external arguments
@@ -431,4 +431,79 @@ zookeeper-3.4.6-with-wd.jar
     \end{center}
 \end{frame}
 
+\begin{frame}{Validate Impact of Caught Faults}
+    \begin{block}{Transient or tolerable}
+        \begin{itemize}
+            \item e.g. transient network delay that caused no damage
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{Default: simply re-executes the checker and compare for transient errors}
+        \begin{itemize}
+            \item  allows developers write their own user-defined validation tasks to check some entry functions, e.g., \texttt{processRequest(req)}
+            \item automate the part of deciding which validation task to invoke depending on which checker failed 
+        \end{itemize}
+    \end{block}
+    
+\end{frame}
+
+\begin{frame}{Prevent Side Effects}
+    \framesubtitle{Context Replication (memory isolation)}
+    Context manager will replicate the checker context so that any modifications are contained in the watchdog’s state
+
+    \begin{center}
+        \includegraphics[width=.9\textwidth]{fig/replicate}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Prevent Side Effects}
+    \framesubtitle{Context Replication (memory isolation)}
+    To reduce performance overhead: immutability analysis + lazy copy
+    \begin{center}
+        \includegraphics[width=.9\textwidth]{fig/lazy-copy}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Prevent Side Effects}
+    \framesubtitle{Context Replication (memory isolation)}
+    \begin{block}{Check consistency before copying and invocation with hashCode and versioning}
+        Context attributes: \texttt{version}, \texttt{weak\_ref} and \texttt{hash}
+        \begin{itemize}
+            \item The lazy setter only sets these attributes without replicate the context. 
+            \item If getter invoked, check \texttt{weak\_ref!=null}
+            \item Check if hash code of the referent’s value matches \texttt{hash}
+        \end{itemize}
+    \end{block}
+\begin{center}
+    \includegraphics[width=.8\textwidth]{fig/hash}
+\end{center}
+\end{frame}
+
+\begin{frame}{Prevent Side Effects}
+    \framesubtitle{I/O Redirection and Idempotent Wrappers (I/O isolation)}
+    \begin{description}
+        \item[\textbf{write:}] file-related resource replicated with target path changed to test file
+        \item[\textbf{read:}] let watchdogs pre-read contexts and cache  
+    \end{description}
+
+    \begin{center}
+        \includegraphics[width=.9\textwidth]{fig/io}
+    \end{center}
+\end{frame}
+\section{Evaluation}
+\begin{frame}{Experiments}
+    \framesubtitle{Scale \& Generated watchdog}
+    \begin{tabular}{c|c|c|c|c|c|c}
+        \toprule
+        & ZooKeeper & Cassandra & HDFS &  HBase & MapReduce & Yarn \\
+        \midrule
+SLOC & 28K & 102K & 219K & 728K & 191K & 229K \\
+Methods & 3,562 & 12,919 & 79,584 & 179,821 & 16,633 & 10,432 \\
+\midrule
+Watchdogs & 96 & 190 & 174 & 358 & 161 & 88 \\
+Methods & 118 & 464 & 482 & 795 & 371 & 222 \\
+Operations & 488 & 2,112 & 3,416 & 9,557 & 6,116 & 752 \\
+\bottomrule
+    \end{tabular}
+\end{frame}
 \end{document}
