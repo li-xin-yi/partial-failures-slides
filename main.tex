@@ -5,7 +5,9 @@
 \documentclass[aspectratio=169]{beamer}
 \usepackage{booktabs}
 \usepackage{svg}
+\usepackage{listings}
 \usepackage{fontawesome}
+\usepackage{xcolor}
 \usepackage[style=authortitle-comp,backend=bibtex]{biblatex}
 \usecolortheme{seagull}
 \setbeamertemplate{sidebar right}{}
@@ -15,6 +17,29 @@
 
     \newcommand{\red}[1]{{\color{red}{#1}}}
     \newcommand{\blue}[1]{{\color{blue}{#1}}}
+
+    \lstset{
+        basicstyle=\ttfamily,
+        numbers=left,
+        keywordstyle=\color[rgb]{0.13,0.29,0.53}\bfseries,
+        stringstyle=\color[rgb]{0.31,0.60,0.02},
+        commentstyle=\color[rgb]{0.56,0.35,0.01}\itshape,
+        numberstyle=\footnotesize,
+        stepnumber=1,
+        numbersep=5pt,
+        backgroundcolor=\color[RGB]{248,248,248},
+        showspaces=false,
+        showstringspaces=false,
+        showtabs=false,
+        tabsize=2,
+        captionpos=b,
+        breaklines=true,
+        breakatwhitespace=true,
+        breakautoindent=true,
+        escapeinside={\%*}{*)},
+        linewidth=\textwidth,
+        basewidth=0.5em,
+    }
 
 \title{Understanding, Detecting and Localizing Partial Failures in Large System Software\footfullcite{lou2020understanding}}
 \date{\today}
@@ -211,7 +236,7 @@
     \begin{itemize}
         \item Regularly executes a set of checkers tailored to different modules
         \item Selects some representative operations from each
-        module
+              module
     \end{itemize}
 
     \begin{center}
@@ -220,32 +245,32 @@
 \end{frame}
 
 \begin{frame}{Characteristic II: Stateful}
-\begin{columns}
-    
-    \begin{column}{.5\textwidth}
-        To synchronized states, introduce
-        \begin{block}{\textbf{Context}}
-            \begin{itemize}
-                \item bound
-                to each checker
-                \item  holds all the arguments needed for the
-                checker execution
-                \item  synchronized with the program state through hooks in the main program
-                \item update with current state when hooks reached 
-            \end{itemize}
-        \end{block}
-    \end{column}
+    \begin{columns}
 
-    \begin{column}{.5\textwidth}
+        \begin{column}{.5\textwidth}
+            To synchronized states, introduce
+            \begin{block}{\textbf{Context}}
+                \begin{itemize}
+                    \item bound
+                          to each checker
+                    \item  holds all the arguments needed for the
+                          checker execution
+                    \item  synchronized with the program state through hooks in the main program
+                    \item update with current state when hooks reached
+                \end{itemize}
+            \end{block}
+        \end{column}
 
-        \begin{center}
-            \includegraphics[width=\textwidth]{fig/staetful}
-        \end{center}
+        \begin{column}{.5\textwidth}
 
-        \textbf{Note:} The watchdog driver will not execute a checker unless its context is ready.
+            \begin{center}
+                \includegraphics[width=\textwidth]{fig/staetful}
+            \end{center}
 
-    \end{column}
-\end{columns}
+            \textbf{Note:} The watchdog driver will not execute a checker unless its context is ready.
+
+        \end{column}
+    \end{columns}
 
 \end{frame}
 
@@ -253,13 +278,156 @@
     Run watchdog \red{concurrently} with the main program instead of \blue{in-place} checking with \blue{inserted} checkers
     \begin{center}
         \includegraphics[width=.75
-        \textwidth]{fig/concurrent}
+            \textwidth]{fig/concurrent}
     \end{center}
 \end{frame}
 
 \begin{frame}{Core Idea: Mimic Checking}
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            Imitates some representative operations
+            \begin{center}
+                \includegraphics[width=\textwidth]{fig/mimic}
+            \end{center}
+            \textbf{Exmaple:} Perform a similar operation (snapshot) and also get stuck at the same location
+        \end{column}
+
+        \begin{column}{.4\textwidth}
+            \begin{block}{\textbf{Accurancy}}
+                \begin{itemize}
+                    \item exercises code logic similar to the main program
+                    \item share execution environment in runtime
+                    \item increases coverage of checking targets
+                    \item can pinpoint the faulty module and failing instruction
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+
+\subsection{Implementation}
+
+\begin{frame}[fragile]{Implementation: \texttt{OmegaGen}}
+    \framesubtitle{Tool Overview}
+
+    \begin{itemize}
+        \item a prototype that systematically generates mimic-type watchdogs for system softwares
+        \item in Java with 8,100 SLOC, using  \texttt{Soot} analysis framework
+        \item \textbf{core technique:} \red{program reduction}
+
+    \end{itemize}
+
+    \begin{lstlisting}[language=sh]
+$ ./omegagen -jar zookeeper-3.4.6.jar -m zookeeper.manifest
+analyzing..
+generating..
+instrumenting..
+repackaging..
+done. Total 1min 6s.
+$ ls output/
+zookeeper-3.4.6-with-wd.jar
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}{What is Program Reduction?}
+    \begin{definition}
+        Given a program \red{$P$}, create a watchdog \blue{$W$} that can detect partial failures in \red{$P$} without imposing on \red{$P$}’s execution.
+    \end{definition}
+
     \begin{center}
-        \includegraphics[width=.75\textwidth]{fig/mimic}
+        \includegraphics[width=.6\textwidth]{fig/reduce}
+    \end{center}
+
+    \textbf{Reduce:} We need not put everything into checkers, because a lot of operations are logically \red{deterministic} and should be checked before production. Only some of them are more \red{vulnerable}
+    in the production environment.
+\end{frame}
+
+\begin{frame}{Program Reduction}
+    For the source code of a given program, the process will go through five steps:
+    \vspace{2em}
+    \begin{enumerate}
+        \item locate long-running regions
+        \item  reduce the program
+        \item  locate vulnerable operations
+        \item  encapsulate watchdog checkers
+        \item  insert watchdog hooks
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Step 1: Locate Long-running Regions}
+    \begin{block}{Identifies potentially long-running loops in the function body}
+        e.g. \texttt{while(true)},\texttt{while(flag)}
+    \end{block}
+
+    However, an identified \red{long-running} loop may turn out to be \blue{short-lived} in an actual run.
+
+    \begin{block}{\textbf{predicate}-based algorithm}
+        a runtime property associated with a method which tracks whether a call site of this method is in fact reached
+        \begin{itemize}
+            \item insert a hook before the loop $\to$  sets its predicate
+            \item insert a hook after the loop $\to$ unset its predicate
+            \item pass caller’s predicate set to callees
+        \end{itemize}
+        Runtime:
+        \begin{itemize}
+            \item activate or activates or deactivates the associated watchdog based on assigned predicate
+        \end{itemize}
+    \end{block}
+
+\end{frame}
+
+\begin{frame}{Step 1: Locate Long-running Regions}
+\framesubtitle{An example}
+    \begin{center}
+        \includegraphics[width=.9\textwidth]{fig/long-run}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Step 2: Reduce the Program}
+    Recursively analyze each function to find out \red{vulnerable} operations (in the next step)
+    \begin{center}
+        \includegraphics[width=.8\textwidth]{fig/rec-reduce}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Step 3: Locate Vulnerable Operations}
+    Looks for potentially \red{vulnerable} operations in the control flow of those long-running methods.
+
+    \begin{itemize}
+        \item Heuristics (default):
+        \begin{itemize}
+            \item synchronisation
+            \item resource allocaion
+            \item event polling
+            \item async waiting
+            \item invocations using external arguments
+            \item file or network I/
+            \item complex while loop conditional
+        \end{itemize}
+        \item Customize rule table in configuration
+        \item Developers can also explicitly annotate an operation as \texttt{@vulnerable} in source codes
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Step 4: Encapsulate Watchdog Checkers}
+    \framesubtitle{Construct reduced method for each \red{vulnerable} method in main program}
+    \begin{center}
+        \includegraphics[width=.85\textwidth]{fig/encapsulate}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Step 5: Insert Watchdog Hooks}
+\framesubtitle{To capture the real state of the main program in runtime and pass it to the checker}
+    \begin{center}
+        \includegraphics[width=.95\textwidth]{fig/hook}
+    \end{center}
+\end{frame}
+
+\begin{frame}{An overview example}
+    \begin{center}
+        \includegraphics[width=\textwidth]{fig/compare}
     \end{center}
 \end{frame}
 
