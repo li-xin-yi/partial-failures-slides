@@ -1,4 +1,3 @@
-% !TeX engine = xelatex
 % !TeX spellcheck = en-US
 % adjust to 16:9 for displays. you can just use \documentclass[handout]{ctexbeamer} for notes
 
@@ -8,6 +7,7 @@
 \usepackage{listings}
 \usepackage{fontawesome}
 \usepackage{xcolor}
+\usepackage{bookmark}
 \usepackage[style=authortitle-comp,backend=bibtex]{biblatex}
 \usecolortheme{seagull}
 \setbeamertemplate{sidebar right}{}
@@ -379,7 +379,7 @@ zookeeper-3.4.6-with-wd.jar
 \end{frame}
 
 \begin{frame}{Step 1: Locate Long-running Regions}
-\framesubtitle{An example}
+    \framesubtitle{An example}
     \begin{center}
         \includegraphics[width=.9\textwidth]{fig/long-run}
     \end{center}
@@ -397,15 +397,15 @@ zookeeper-3.4.6-with-wd.jar
 
     \begin{itemize}
         \item Heuristics (default):
-        \begin{itemize}
-            \item synchronization
-            \item resource allocation
-            \item event polling
-            \item async waiting
-            \item invocations using external arguments
-            \item file or network I/
-            \item complex while loop conditional
-        \end{itemize}
+              \begin{itemize}
+                  \item synchronization
+                  \item resource allocation
+                  \item event polling
+                  \item async waiting
+                  \item invocations using external arguments
+                  \item file or network I/
+                  \item complex while loop conditional
+              \end{itemize}
         \item Customize rule table in configuration
         \item Developers can also explicitly annotate an operation as \texttt{@vulnerable} in source codes
     \end{itemize}
@@ -419,7 +419,7 @@ zookeeper-3.4.6-with-wd.jar
 \end{frame}
 
 \begin{frame}{Step 5: Insert Watchdog Hooks}
-\framesubtitle{To capture the real state of the main program in runtime and pass it to the checker}
+    \framesubtitle{To capture the real state of the main program in runtime and pass it to the checker}
     \begin{center}
         \includegraphics[width=.95\textwidth]{fig/hook}
     \end{center}
@@ -441,10 +441,10 @@ zookeeper-3.4.6-with-wd.jar
     \begin{block}{Default: simply re-executes the checker and compare for transient errors}
         \begin{itemize}
             \item  allows developers write their own user-defined validation tasks to check some entry functions, e.g., \texttt{processRequest(req)}
-            \item automate the part of deciding which validation task to invoke depending on which checker failed 
+            \item automate the part of deciding which validation task to invoke depending on which checker failed
         \end{itemize}
     \end{block}
-    
+
 \end{frame}
 
 \begin{frame}{Prevent Side Effects}
@@ -469,21 +469,21 @@ zookeeper-3.4.6-with-wd.jar
     \begin{block}{Check consistency before copying and invocation with hashCode and versioning}
         Context attributes: \texttt{version}, \texttt{weak\_ref} and \texttt{hash}
         \begin{itemize}
-            \item The lazy setter only sets these attributes without replicate the context. 
+            \item The lazy setter only sets these attributes without replicate the context.
             \item If getter invoked, check \texttt{weak\_ref!=null}
             \item Check if hash code of the referent’s value matches \texttt{hash}
         \end{itemize}
     \end{block}
-\begin{center}
-    \includegraphics[width=.8\textwidth]{fig/hash}
-\end{center}
+    \begin{center}
+        \includegraphics[width=.8\textwidth]{fig/hash}
+    \end{center}
 \end{frame}
 
 \begin{frame}{Prevent Side Effects}
     \framesubtitle{I/O Redirection and Idempotent Wrappers (I/O isolation)}
     \begin{description}
         \item[\textbf{write:}] file-related resource replicated with target path changed to test file
-        \item[\textbf{read:}] let watchdogs pre-read contexts and cache  
+        \item[\textbf{read:}] let watchdogs pre-read contexts and cache
     \end{description}
 
     \begin{center}
@@ -495,15 +495,43 @@ zookeeper-3.4.6-with-wd.jar
     \framesubtitle{Scale \& Generated watchdog}
     \begin{tabular}{c|c|c|c|c|c|c}
         \toprule
-        & ZooKeeper & Cassandra & HDFS &  HBase & MapReduce & Yarn \\
+                   & ZooKeeper & Cassandra & HDFS   & HBase   & MapReduce & Yarn   \\
         \midrule
-SLOC & 28K & 102K & 219K & 728K & 191K & 229K \\
-Methods & 3,562 & 12,919 & 79,584 & 179,821 & 16,633 & 10,432 \\
-\midrule
-Watchdogs & 96 & 190 & 174 & 358 & 161 & 88 \\
-Methods & 118 & 464 & 482 & 795 & 371 & 222 \\
-Operations & 488 & 2,112 & 3,416 & 9,557 & 6,116 & 752 \\
-\bottomrule
+        SLOC       & 28K       & 102K      & 219K   & 728K    & 191K      & 229K   \\
+        Methods    & 3,562     & 12,919    & 79,584 & 179,821 & 16,633    & 10,432 \\
+        \midrule
+        Watchdogs  & 96        & 190       & 174    & 358     & 161       & 88     \\
+        Methods    & 118       & 464       & 482    & 795     & 371       & 222    \\
+        Operations & 488       & 2,112     & 3,416  & 9,557   & 6,116     & 752    \\
+        \bottomrule
     \end{tabular}
 \end{frame}
+
+% \begin{frame}[allowframebreaks]{22 Real-world Partial Failures Reproduced for Evaluation}
+%     \begin{tabular}{c|c|c|c|c|c}
+%         JIRA Id.       & Id. & Root Cause          & Conseq.      & Sticky? & Study? \\
+%         ZooKeeper-2201 & ZK1 & Bad Synch.          & Stuck        & No      & Yes    \\
+%         ZooKeeper-602  & ZK2 & Uncaught Error      & Zombie       & Yes     & Yes    \\
+%         ZooKeeper-2325 & ZK3 & Logic Error         & Inconsist    & Yes     & No     \\
+%         ZooKeeper-3131 & ZK4 & Resource            & Leak Slow    & Yes     & Yes    \\
+%         Cassandra-6364 & CS1 & Uncaught            & Error Zombie & Yes     & Yes    \\
+%         Cassandra-6415 & CS2 & Indefinite Blocking & Stuck        & No      & Yes    \\
+%         Cassandra-9549 & CS3 & Resource Leak       & Slow         & Yes     & No     \\
+%         Cassandra-9486 & CS4 & Performance   Bug   & Slow         & Yes     & No     \\
+%         % HDFS-8429 HF1 Uncaught Error Stuck Yes Yes
+%         % HDFS-11377 HF2 Indefinite Blocking Stuck No Yes
+%         % HDFS-11352 HF3 Deadlock Stuck Yes No
+%         % HDFS-4233 HF4 Uncaught Error Data Loss Yes No
+%         % HBase-18137 HB1 Infinite Loop Stuck Yes No
+%         % HBase-16429 HB2 Deadlock Stuck Yes No
+%         % HBase-21464 HB3 Logic Error Stuck Yes No
+%         % HBase-21357 HB4 Uncaught Error Denial Yes No
+%         % HBase-16081 HB5 Indefinite Blocking Silent Yes No
+%         % MapReduce-6351 MR1 Deadlock Stuck Yes No
+%         % MapReduce-6190 MR2 Infinite Loop Stuck Yes No
+%         % MapReduce-6957 MR3 Improper Err Handling Stuck Yes No
+%         % MapReduce-3634 MR4 Uncaught Error Zombie Yes No
+%         % Yarn-4254 YN1 Improper Err Handling Stuck Yes No
+%     \end{tabular}
+% \end{frame}
 \end{document}
