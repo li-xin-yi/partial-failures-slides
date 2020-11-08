@@ -10,6 +10,12 @@ A study of [this paper](https://www.usenix.org/conference/nsdi20/presentation/lo
 
 Some notes also come from the material above.
 
+# Build
+
+```
+$pdflatex main.tex -o main.pdf
+```
+
 # References
 
 Lou, Chang, Peng Huang, and Scott Smith. "Understanding, Detecting and Localizing Partial Failures in Large System Software." *17th {USENIX} Symposium on Networked Systems Design and Implementation ({NSDI} 20).* 2020.
